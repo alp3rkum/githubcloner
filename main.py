@@ -1,0 +1,92 @@
+from textual.app import App, ComposeResult
+from textual.containers import Vertical, Horizontal
+from textual.widgets import Static, Input, Button, Footer
+from textual.binding import Binding
+from textual.reactive import reactive
+import subprocess
+
+class GitCloneApp(App):
+    BINDINGS = [
+        Binding(key="q", action="quit", description="Quit the app"),
+        Binding(
+            key="question_mark",
+            action="show_code",
+            description="Show/hide the code",
+            key_display="?",
+        ),
+    ]
+    # BINDINGS = [
+    #     Binding(key="question_mark", action="show_my_code", description="Show the code", key_display="?", show=True)
+    # ]
+    CSS_PATH = "app.tcss"
+    repo_name = reactive("")
+
+    def compose(self) -> ComposeResult:
+        with Vertical():
+            with Horizontal(id="project-row"):
+                yield Static("Enter the link of the repo:", id="project-label")
+                yield Input(placeholder="GitHub repo", id="project-input")
+                yield Button("Clone", id="clone-button")
+            yield Static("", id="status")
+        yield Footer()
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        self.repo_name = event.value.strip()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "clone-button" and self.repo_name:
+            button = self.query_one("#clone-button", Button)
+            button.add_class("button-pressed")
+            self.set_timer(0.5, lambda: button.remove_class("button-pressed"))
+            self.clone_repo(self.repo_name)
+
+    def clone_repo(self, repo: str) -> None:
+        url = f"{repo}.git"
+        status = self.query_one("#status", Static)
+        
+        try:
+            # Capture output but DO NOT use threads. This blocks the whole app.
+            result = subprocess.run(
+                ["git", "clone", url], 
+                check=True, 
+                capture_output=True, 
+                text=True
+            )
+            # Display ONLY the captured result
+            status.update(f"[green]✔ Cloned:[/] {url}\n\n[dim]{result.stdout.strip()}[/dim]")
+            
+        except subprocess.CalledProcessError as e:
+            # Display ONLY the captured error result
+            status.update(f"[red]✖ Failed to clone:[/] {url}\n\n[red]{e.stderr.strip()}[/red]")
+
+    def on_mount(self) -> None:
+        try:
+            label_widget = self.query_one("#clone-button", Button)
+            self.set_focus(label_widget)
+        except Exception:
+            # Eğer label odaklanamıyorsa (nadiren olur), yine de None ile deneyelim.
+            self.set_focus(None)
+
+    def action_show_code(self) -> None:
+        status_widget = self.query_one("#status", Static)
+        
+        # Mevcut içeriği kontrol etmek için: Eğer son güncellemede '?' ile açılmış kod varsa onu gizle
+        # En basit kontrol: Status widget'ının içeriği boş mu?
+        
+        # Eğer içerik boşsa (yani gizliyse), kodu göster.
+        if not status_widget.content: # <-- Static'in içeriğini kontrol etmenin daha sağlam yolu
+            
+            repo_url_part = self.repo_name if self.repo_name else "https://github.com/user/repo"
+            full_clone_command = f"git clone {repo_url_part}.git" 
+            
+            status_widget.update(
+                "[bold cyan]This application uses the 'git clone' command, which is used as follows:[/bold cyan]\n\n"
+                f"[yellow]{full_clone_command}[/yellow]\n\n"
+                "[dim]Press '?' again to hide this code.[/dim]"
+            )
+        else:
+            # İçerik varsa (kod gösteriliyorsa), temizle (gizle)
+            status_widget.update("")
+
+if __name__ == "__main__":
+    GitCloneApp().run()
