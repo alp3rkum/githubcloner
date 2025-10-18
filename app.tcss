@@ -1,0 +1,43 @@
+#project-row {
+    layout: horizontal;
+    height: auto;
+    padding: 1 2;
+    align-vertical: middle;
+}
+
+#project-label {
+    width: 25%;
+    height: 3;
+    content-align: right middle;
+    padding-right: 1;
+}
+
+#project-input {
+    width: 50%;
+    padding: 0 1;
+}
+
+#clone-button {
+    width: 25%;
+    height: 3;
+    content-align: center middle;
+    background: rgb(0,255,0);
+    color: black;
+    border: none;
+}
+
+#clone-button:hover {
+    background: rgb(0,192,0);
+}
+
+.button-pressed {
+    background: rgb(0,160,0);
+    color: black;
+}
+
+#status {
+    margin-top: 1;
+    padding: 1 2;
+    height: auto;
+    color: $text;
+}
