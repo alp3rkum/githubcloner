@@ -15,9 +15,6 @@ class GitCloneApp(App):
             key_display="?",
         ),
     ]
-    # BINDINGS = [
-    #     Binding(key="question_mark", action="show_my_code", description="Show the code", key_display="?", show=True)
-    # ]
     CSS_PATH = "app.tcss"
     repo_name = reactive("")
 
@@ -43,7 +40,6 @@ class GitCloneApp(App):
     def clone_repo(self, repo: str) -> None:
         status = self.query_one("#status", Static)
 
-        # Branch ayıklama
         branch = None
         if "/tree/" in repo:
             parts = repo.split("/tree/")
@@ -54,7 +50,6 @@ class GitCloneApp(App):
 
         url = f"{repo}.git"
 
-        # Komut oluşturma
         command = ["git", "clone"]
         if branch:
             command += ["--branch", branch, "--single-branch"]
@@ -92,10 +87,6 @@ class GitCloneApp(App):
     def action_show_code(self) -> None:
         status_widget = self.query_one("#status", Static)
         
-        # Mevcut içeriği kontrol etmek için: Eğer son güncellemede '?' ile açılmış kod varsa onu gizle
-        # En basit kontrol: Status widget'ının içeriği boş mu?
-        
-        # Eğer içerik boşsa (yani gizliyse), kodu göster.
         if not status_widget.content: # <-- Static'in içeriğini kontrol etmenin daha sağlam yolu
             
             repo_url_part = self.repo_name if self.repo_name else "https://github.com/user/repo"
@@ -111,7 +102,6 @@ class GitCloneApp(App):
                 "[dim]Press '?' again to hide this code.[/dim]"
             )
         else:
-            # İçerik varsa (kod gösteriliyorsa), temizle (gizle)
             status_widget.update("")
 
 if __name__ == "__main__":
