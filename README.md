@@ -14,6 +14,8 @@ This program takes one task, which is cloning a GitHub repo/branch, and makes it
 
 If you want to clone a specific repo, you can just copy-paste the repo's full link (with /tree/branchname), and it will clone that specific branch too.
 
+**QUICK UPDATE**: You can run the application through terminal if you're going to use it CI/CD or just want to do so. This application now supports both use cases, like a real good TUI application should :)
+
 ## What Do You Need?
 
 * Python (this application was coded with 3.12.2)
