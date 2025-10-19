@@ -41,23 +41,45 @@ class GitCloneApp(App):
             self.clone_repo(self.repo_name)
 
     def clone_repo(self, repo: str) -> None:
-        url = f"{repo}.git"
         status = self.query_one("#status", Static)
-        
+
+        # Branch ayıklama
+        branch = None
+        if "/tree/" in repo:
+            parts = repo.split("/tree/")
+            repo = parts[0]
+            branch = parts[1].split("/")[0]
+            folder = repo.split("/")[-1] + "-" + branch
+
+
+        url = f"{repo}.git"
+
+        # Komut oluşturma
+        command = ["git", "clone"]
+        if branch:
+            command += ["--branch", branch, "--single-branch"]
+        command.append(url)
+        if folder:
+            command.append(folder)
+
         try:
-            # Capture output but DO NOT use threads. This blocks the whole app.
             result = subprocess.run(
-                ["git", "clone", url], 
-                check=True, 
-                capture_output=True, 
+                command,
+                check=True,
+                capture_output=True,
                 text=True
             )
-            # Display ONLY the captured result
-            status.update(f"[green]✔ Cloned:[/] {url}\n\n[dim]{result.stdout.strip()}[/dim]")
-            
+            status.update(
+                f"[green]✔ Cloned:[/] {url}"
+                + (f" [dim](branch: {branch})[/dim]" if branch else "")
+                + f"\n\n[dim]{result.stdout.strip()}[/dim]"
+            )
         except subprocess.CalledProcessError as e:
-            # Display ONLY the captured error result
-            status.update(f"[red]✖ Failed to clone:[/] {url}\n\n[red]{e.stderr.strip()}[/red]")
+            status.update(
+                f"[red]✖ Failed to clone:[/] {url}"
+                + (f" [dim](branch: {branch})[/dim]" if branch else "")
+                + f"\n\n[red]{e.stderr.strip()}[/red]"
+            )
 
     def on_mount(self) -> None:
         try:
@@ -77,11 +99,15 @@ class GitCloneApp(App):
         if not status_widget.content: # <-- Static'in içeriğini kontrol etmenin daha sağlam yolu
             
             repo_url_part = self.repo_name if self.repo_name else "https://github.com/user/repo"
-            full_clone_command = f"git clone {repo_url_part}.git" 
+            full_clone_command = f"git clone {repo_url_part}.git"
+            foldername = "examplefolder"
+            branch = "branchname"
+            full_clone_branch_command = f"git -b {branch} --single-branch clone {repo_url_part}.git repo-{branch}"
             
             status_widget.update(
                 "[bold cyan]This application uses the 'git clone' command, which is used as follows:[/bold cyan]\n\n"
-                f"[yellow]{full_clone_command}[/yellow]\n\n"
+                f"For whole repos: [yellow]{full_clone_command}[/yellow]\n\n"
+                f"For a specific branch: [yellow]{full_clone_branch_command}[/yellow]\n\n"
                 "[dim]Press '?' again to hide this code.[/dim]"
             )
         else:
